@@ -8,7 +8,7 @@ import zipfile
 
 # Define model path and Hugging Face model URL
 MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
-MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras"
+MODEL_URL = "https://drive.google.com/file/d/19XTILdrYUFcIhFBIu_rSAWaACgN6kHLX/view?usp=sharing"
 
 # Function to download model safely
 def download_model():
