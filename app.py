@@ -7,13 +7,7 @@ from PIL import Image
 
 # Define model path and Hugging Face model URL
 MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
-MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras?download=true"
-
-# Custom metric (if needed)
-def iou_metric(y_true, y_pred):
-    intersection = tf.reduce_sum(y_true * y_pred)
-    union = tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) - intersection
-    return intersection / (union + 1e-7)
+MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras"
 
 # Function to download model safely
 def download_model():
@@ -35,9 +29,18 @@ def download_model():
             st.error(f"Failed to download model. HTTP Status: {response.status_code}")
             return None
 
+    return load_model()
+
+# Function to load model correctly
+def load_model():
     try:
-        custom_objects = {"iou_metric": iou_metric}  # Register custom metrics
-        return tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_objects)
+        st.info("Loading model...")
+
+        # Try loading without compiling
+        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+
+        st.success("Model loaded successfully!")
+        return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
