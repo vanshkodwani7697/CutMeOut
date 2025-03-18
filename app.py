@@ -6,12 +6,12 @@ import tensorflow as tf
 from PIL import Image
 import io
 
-# Model path
+# Model path and Hugging Face model URL
 MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
 MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras?download=true"
 
-# Function to check and download model if not found
-def load_model():
+# Function to download model if not available
+def download_model():
     if not os.path.exists(MODEL_PATH):
         st.info("Downloading model... Please wait.")
         response = requests.get(MODEL_URL, stream=True)
@@ -21,12 +21,12 @@ def load_model():
                     f.write(chunk)
             st.success("Model downloaded successfully!")
         else:
-            st.error("Failed to download model. Check the URL or your internet connection.")
+            st.error("Failed to download model. Check the URL or internet connection.")
             return None
     return tf.keras.models.load_model(MODEL_PATH)
 
-# Load model
-model = load_model()
+# Load the model
+model = download_model()
 if model is None:
     st.stop()  # Stop execution if the model couldn't be loaded
 
@@ -40,7 +40,7 @@ def preprocess_image(image):
     image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
     return image_array
 
-# Function to make prediction
+# Function to get prediction
 def get_prediction(image):
     preprocessed_image = preprocess_image(image)
     prediction = model.predict(preprocessed_image)
