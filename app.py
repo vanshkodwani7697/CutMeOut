@@ -4,6 +4,7 @@ import requests
 import os
 import tensorflow as tf
 from PIL import Image
+import zipfile
 
 # Define model path and Hugging Face model URL
 MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
@@ -13,6 +14,7 @@ MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/perso
 def download_model():
     if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) == 0:
         st.info("Downloading model... Please wait.")
+        
         response = requests.get(MODEL_URL, stream=True)
 
         if response.status_code == 200:
@@ -31,9 +33,25 @@ def download_model():
 
     return load_model()
 
+# Function to check if the file is actually a .keras (zip) file
+def validate_model_file():
+    if not os.path.exists(MODEL_PATH):
+        return False
+
+    try:
+        with zipfile.ZipFile(MODEL_PATH, 'r') as zf:
+            return True
+    except zipfile.BadZipFile:
+        return False
+
 # Function to load model correctly
 def load_model():
     try:
+        if not validate_model_file():
+            st.error("Downloaded model file is not valid. Redownloading...")
+            os.remove(MODEL_PATH)  # Remove corrupt file
+            return download_model()
+
         st.info("Loading model...")
 
         # Try loading without compiling
