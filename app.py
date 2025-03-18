@@ -1,14 +1,34 @@
 import streamlit as st
 import numpy as np
 import requests
+import os
+import tensorflow as tf
 from PIL import Image
 import io
 
-# Hugging Face API endpoint
-API_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/tree/main"
+# Model path
+MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
+MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras?download=true"
 
-# Set headers with your Hugging Face token (optional if the model is public)
-HEADERS = {}
+# Function to check and download model if not found
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        st.info("Downloading model... Please wait.")
+        response = requests.get(MODEL_URL, stream=True)
+        if response.status_code == 200:
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    f.write(chunk)
+            st.success("Model downloaded successfully!")
+        else:
+            st.error("Failed to download model. Check the URL or your internet connection.")
+            return None
+    return tf.keras.models.load_model(MODEL_PATH)
+
+# Load model
+model = load_model()
+if model is None:
+    st.stop()  # Stop execution if the model couldn't be loaded
 
 # Function to preprocess image
 def preprocess_image(image):
@@ -17,20 +37,15 @@ def preprocess_image(image):
 
     image = image.resize((256, 256))  # Resize to match model input size
     image_array = np.array(image) / 255.0  # Normalize the image
+    image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
     return image_array
 
-# Function to send image to Hugging Face API
+# Function to make prediction
 def get_prediction(image):
-    image_bytes = io.BytesIO()
-    image.save(image_bytes, format="PNG")
-    image_bytes = image_bytes.getvalue()
-
-    response = requests.post(API_URL, headers=HEADERS, files={"file": image_bytes})
-
-    if response.status_code == 200:
-        return np.array(response.json())  # Ensure the response is converted properly
-    else:
-        return None
+    preprocessed_image = preprocess_image(image)
+    prediction = model.predict(preprocessed_image)
+    mask = np.squeeze(prediction)  # Remove batch and channel dimensions
+    return mask
 
 # Streamlit UI
 st.title("CutMeOut - Human Mask Segmentation")
@@ -43,10 +58,10 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    # Preprocess and get prediction
+    # Get prediction
     mask = get_prediction(image)
 
     if mask is not None:
         st.image(mask, caption="Segmentation Mask", use_container_width=True)
     else:
-        st.error("Error in fetching prediction from Hugging Face API")
+        st.error("Error in generating segmentation mask.")
