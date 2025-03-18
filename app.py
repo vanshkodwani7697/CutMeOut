@@ -8,7 +8,7 @@ import io
 
 # Model path and Hugging Face model URL
 MODEL_PATH = "person_segmentation_Unet_Resnet50.keras"
-MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/resolve/main/person_segmentation_Unet_Resnet50.keras?download=true"
+MODEL_URL = "https://huggingface.co/vanshkodwani7697/CutMeOut/tree/main"
 
 # Function to download model if not available
 def download_model():
